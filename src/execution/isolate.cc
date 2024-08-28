@@ -4900,7 +4900,7 @@ bool Isolate::Init(SnapshotData* startup_snapshot_data,
 #endif  // DEBUG
 
   if (v8_flags.print_builtin_code) builtins()->PrintBuiltinCode();
-  if (v8_flags.print_builtin_size) builtins()->PrintBuiltinSize();
+  if (v8_flags.print_builtin_size) builtins()->PrintBuiltinSize(this);
 
   // Finish initialization of ThreadLocal after deserialization is done.
   clear_exception();

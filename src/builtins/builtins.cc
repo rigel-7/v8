@@ -302,15 +302,16 @@ void Builtins::PrintBuiltinCode() {
 #endif
 }
 
-void Builtins::PrintBuiltinSize() {
+void Builtins::PrintBuiltinSize(Isolate* isolate) {
   DCHECK(v8_flags.print_builtin_size);
   for (Builtin builtin = Builtins::kFirst; builtin <= Builtins::kLast;
        ++builtin) {
     const char* builtin_name = name(builtin);
     const char* kind = KindNameOf(builtin);
     Tagged<Code> code = Builtins::code(builtin);
-    PrintF(stdout, "%s Builtin, %s, %d\n", kind, builtin_name,
-           code->instruction_size());
+    PrintF(stdout, "0x%lx, 0x%016llx, %s Builtin, %s, %d\n",
+      builtin, isolate->isolate_data()->builtin_entry_table()[ToInt(builtin)],
+      kind, builtin_name, code->instruction_size());
   }
 }
 

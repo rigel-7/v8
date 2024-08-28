@@ -185,7 +185,7 @@ class Builtins {
 
   // Support for --print-builtin-size and --print-builtin-code.
   void PrintBuiltinCode();
-  void PrintBuiltinSize();
+  void PrintBuiltinSize(Isolate* isolate);
 
   // Returns the C++ entry point for builtins implemented in C++, and the null
   // Address otherwise.
