@@ -346,14 +346,13 @@ void RegExpMacroAssemblerARM64::CheckNotBackReferenceIgnoreCase(
     Label loop_check;
 
     Register capture_start_address = x12;
-    Register capture_end_addresss = x13;
+    Register capture_end_address = x13;
     Register current_position_address = x14;
 
     __ Add(capture_start_address,
            input_end(),
            Operand(capture_start_offset, SXTW));
-    __ Add(capture_end_addresss,
-           capture_start_address,
+    __ Add(capture_end_address, capture_start_address,
            Operand(capture_length, SXTW));
     __ Add(current_position_address,
            input_end(),
@@ -386,7 +385,7 @@ void RegExpMacroAssemblerARM64::CheckNotBackReferenceIgnoreCase(
     __ B(eq, &fail);  // Weren't Latin-1 letters.
 
     __ Bind(&loop_check);
-    __ Cmp(capture_start_address, capture_end_addresss);
+    __ Cmp(capture_start_address, capture_end_address);
     __ B(lt, &loop);
     __ B(&success);
 
@@ -585,10 +584,9 @@ void RegExpMacroAssemblerARM64::CheckCharacterNotInRange(
 
 void RegExpMacroAssemblerARM64::CallIsCharacterInRangeArray(
     const ZoneList<CharacterRange>* ranges) {
-  static const int kNumArguments = 3;
+  static const int kNumArguments = 2;
   __ Mov(w0, current_character());
   __ Mov(x1, GetOrAddRangeArray(ranges));
-  __ Mov(x2, ExternalReference::isolate_address(isolate()));
 
   {
     // We have a frame (set up in GetCode), but the assembler doesn't know.
@@ -1189,10 +1187,11 @@ Handle<HeapObject> RegExpMacroAssemblerARM64::GetCode(Handle<String> source) {
   Handle<Code> code =
       Factory::CodeBuilder(isolate(), code_desc, CodeKind::REGEXP)
           .set_self_reference(masm_->CodeObject())
+          .set_empty_source_position_table()
           .Build();
   PROFILE(masm_->isolate(),
-          RegExpCodeCreateEvent(Handle<AbstractCode>::cast(code), source));
-  return Handle<HeapObject>::cast(code);
+          RegExpCodeCreateEvent(Cast<AbstractCode>(code), source));
+  return Cast<HeapObject>(code);
 }
 
 
@@ -1427,7 +1426,7 @@ int RegExpMacroAssemblerARM64::CheckStackGuardState(
     int start_index, const uint8_t** input_start, const uint8_t** input_end,
     uintptr_t extra_space) {
   Tagged<InstructionStream> re_code =
-      InstructionStream::cast(Tagged<Object>(raw_code));
+      Cast<InstructionStream>(Tagged<Object>(raw_code));
   return NativeRegExpMacroAssembler::CheckStackGuardState(
       frame_entry<Isolate*>(re_frame, kIsolateOffset), start_index,
       static_cast<RegExp::CallOrigin>(

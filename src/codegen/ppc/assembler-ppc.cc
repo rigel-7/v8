@@ -40,7 +40,7 @@
 #include <sys/utsname.h>
 #endif
 
-#if V8_TARGET_ARCH_PPC || V8_TARGET_ARCH_PPC64
+#if V8_TARGET_ARCH_PPC64
 
 #include "src/base/bits.h"
 #include "src/base/cpu.h"
@@ -1383,6 +1383,17 @@ void Assembler::mov(Register dst, const Operand& src) {
   bool relocatable = src.must_output_reloc_info(this);
   bool canOptimize;
 
+  if (src.rmode_ == RelocInfo::WASM_CANONICAL_SIG_ID) {
+    if (relocatable) {
+      RecordRelocInfo(src.rmode_);
+    }
+    CHECK(is_int32(value));
+    // If this is changed then also change `uint32_constant_at` and
+    // `set_uint32_constant_at`.
+    bitwise_mov32(dst, value);
+    return;
+  }
+
   canOptimize =
       !(relocatable ||
         (is_trampoline_pool_blocked() &&
@@ -1502,8 +1513,8 @@ void Assembler::bitwise_add32(Register dst, Register src, int32_t value) {
   }
 }
 
-void Assembler::patch_wasm_cpi_return_address(Register dst, int pc_offset,
-                                              int return_address_offset) {
+void Assembler::patch_pc_address(Register dst, int pc_offset,
+                                 int return_address_offset) {
   DCHECK(is_int16(return_address_offset));
   Assembler patching_assembler(
       AssemblerOptions{},
@@ -2267,4 +2278,4 @@ PatchingAssembler::~PatchingAssembler() {
 }  // namespace internal
 }  // namespace v8
 
-#endif  // V8_TARGET_ARCH_PPC || V8_TARGET_ARCH_PPC64
+#endif  // V8_TARGET_ARCH_PPC64

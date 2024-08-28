@@ -13,6 +13,8 @@
 namespace v8 {
 namespace internal {
 
+#include "src/codegen/define-code-stub-assembler-macros.inc"
+
 class AsyncFunctionBuiltinsAssembler : public AsyncBuiltinsAssembler {
  public:
   explicit AsyncFunctionBuiltinsAssembler(compiler::CodeAssemblerState* state)
@@ -20,7 +22,7 @@ class AsyncFunctionBuiltinsAssembler : public AsyncBuiltinsAssembler {
 
  protected:
   template <typename Descriptor>
-  void AsyncFunctionAwait(const bool is_predicted_as_caught);
+  void AsyncFunctionAwait();
 
   void AsyncFunctionAwaitResumeClosure(
       const TNode<Context> context, const TNode<Object> sent_value,
@@ -194,40 +196,29 @@ TF_BUILTIN(AsyncFunctionAwaitResolveClosure, AsyncFunctionBuiltinsAssembler) {
 // The 'value' parameter is the value; the .generator_object stands in
 // for the asyncContext.
 template <typename Descriptor>
-void AsyncFunctionBuiltinsAssembler::AsyncFunctionAwait(
-    const bool is_predicted_as_caught) {
+void AsyncFunctionBuiltinsAssembler::AsyncFunctionAwait() {
   auto async_function_object =
       Parameter<JSAsyncFunctionObject>(Descriptor::kAsyncFunctionObject);
   auto value = Parameter<Object>(Descriptor::kValue);
   auto context = Parameter<Context>(Descriptor::kContext);
 
-  TNode<SharedFunctionInfo> on_resolve_sfi =
-      AsyncFunctionAwaitResolveSharedFunConstant();
-  TNode<SharedFunctionInfo> on_reject_sfi =
-      AsyncFunctionAwaitRejectSharedFunConstant();
   TNode<JSPromise> outer_promise = LoadObjectField<JSPromise>(
       async_function_object, JSAsyncFunctionObject::kPromiseOffset);
-  Await(context, async_function_object, value, outer_promise, on_resolve_sfi,
-        on_reject_sfi, is_predicted_as_caught);
+  Await(context, async_function_object, value, outer_promise,
+        RootIndex::kAsyncFunctionAwaitResolveClosureSharedFun,
+        RootIndex::kAsyncFunctionAwaitRejectClosureSharedFun);
 
   // Return outer promise to avoid adding an load of the outer promise before
   // suspending in BytecodeGenerator.
   Return(outer_promise);
 }
 
-// Called by the parser from the desugaring of 'await' when catch
-// prediction indicates that there is a locally surrounding catch block.
-TF_BUILTIN(AsyncFunctionAwaitCaught, AsyncFunctionBuiltinsAssembler) {
-  static const bool kIsPredictedAsCaught = true;
-  AsyncFunctionAwait<Descriptor>(kIsPredictedAsCaught);
+// Called by the parser from the desugaring of 'await'.
+TF_BUILTIN(AsyncFunctionAwait, AsyncFunctionBuiltinsAssembler) {
+  AsyncFunctionAwait<Descriptor>();
 }
 
-// Called by the parser from the desugaring of 'await' when catch
-// prediction indicates no locally surrounding catch block.
-TF_BUILTIN(AsyncFunctionAwaitUncaught, AsyncFunctionBuiltinsAssembler) {
-  static const bool kIsPredictedAsCaught = false;
-  AsyncFunctionAwait<Descriptor>(kIsPredictedAsCaught);
-}
+#include "src/codegen/undef-code-stub-assembler-macros.inc"
 
 }  // namespace internal
 }  // namespace v8

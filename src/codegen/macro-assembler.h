@@ -62,7 +62,7 @@ enum class SetIsolateDataSlots {
 #elif V8_TARGET_ARCH_ARM
 #include "src/codegen/arm/constants-arm.h"
 #include "src/codegen/arm/macro-assembler-arm.h"
-#elif V8_TARGET_ARCH_PPC || V8_TARGET_ARCH_PPC64
+#elif V8_TARGET_ARCH_PPC64
 #include "src/codegen/ppc/constants-ppc.h"
 #include "src/codegen/ppc/macro-assembler-ppc.h"
 #elif V8_TARGET_ARCH_MIPS64
@@ -97,7 +97,7 @@ static constexpr int kMaxCParameters = 256;
 class V8_NODISCARD FrameScope {
  public:
   explicit FrameScope(MacroAssembler* masm, StackFrame::Type type,
-                      SourceLocation loc = SourceLocation())
+                      const SourceLocation& loc = SourceLocation())
       :
 #ifdef V8_CODE_COMMENTS
         comment_(masm, frame_name(type), loc),
